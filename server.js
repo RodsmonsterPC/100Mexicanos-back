@@ -12,7 +12,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4173'],
+    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4173', 'https://100-mexicanos-front.vercel.app'],
     methods: ['GET', 'POST', 'DELETE', 'PUT'],
     credentials: true,
   }
@@ -25,7 +25,7 @@ connectDB().then(() => {
 });
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4173'],
+  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:4173', 'https://100-mexicanos-front.vercel.app'],
   methods: ['GET', 'POST', 'DELETE', 'PUT'],
   credentials: true,
 }));
