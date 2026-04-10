@@ -82,6 +82,30 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Evento para sincronizar nombre y jugadores del equipo
+  socket.on('update_team', (data) => {
+    // data => { room, team, teamData }
+    if (data.room) {
+      socket.to(data.room).emit('team_updated', data);
+    }
+  });
+
+  // Evento para sincronizar categorías
+  socket.on('update_categories', (data) => {
+    // data => { room, categories }
+    if (data.room) {
+      socket.to(data.room).emit('categories_updated', data);
+    }
+  });
+
+  // Evento para iniciar partida
+  socket.on('start_game', (data) => {
+    // data => { room, gameState }
+    if (data.room) {
+      io.to(data.room).emit('game_started', data);
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log(`🔌 Cliente desconectado: ${socket.id}`);
   });
