@@ -40,7 +40,9 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: '100 Mexicanos Dijeron API ✅' });
 });
 
-// Configuración de WebSockets para Salas
+// Variables globales en memoria
+const roomStates = {};
+
 io.on('connection', (socket) => {
   console.log(`🔌 Cliente conectado: ${socket.id}`);
 
@@ -49,28 +51,39 @@ io.on('connection', (socket) => {
     socket.join(roomCode);
     console.log(`Usuario ${socket.id} se unió a la sala: ${roomCode}`);
     
+    // Inicializar estado de la sala si no existe
+    if (!roomStates[roomCode]) {
+      roomStates[roomCode] = {
+        teamA: { name: '', players: ['', '', '', '', ''] },
+        teamB: { name: '', players: ['', '', '', '', ''] },
+        categories: []
+      };
+    } else {
+      // Sincronizar inmediatamente al que recién entra
+      socket.emit('sync_room_state', roomStates[roomCode]);
+    }
+
     // Opcional: avisar a los demás usuarios de la sala
     socket.to(roomCode).emit('user_joined', { id: socket.id, room: roomCode });
   });
 
   // Evento simple de chat / interaccion para el room
   socket.on('send_interaction', (data) => {
-    // data debe contener { room, message }
     io.to(data.room).emit('receive_interaction', data);
   });
 
   // Evento de ratón (Remote Cursor)
   socket.on('mouse_move', (data) => {
-    // Transmitir cursors sólo a la sala actual de manera "volátil" (descarta paquetes perdidos sin bloquear red)
-    if (data.room) {
-      socket.volatile.to(data.room).emit('mouse_moved', data);
-    }
+    if (data.room) socket.volatile.to(data.room).emit('mouse_moved', data);
   });
 
   // Evento de ocupar lugar en equipo
   socket.on('claim_slot', (data) => {
-    // data => { room, team, index, username }
     if (data.room) {
+      if (roomStates[data.room]) {
+         const teamObj = data.team === 'A' ? roomStates[data.room].teamA : roomStates[data.room].teamB;
+         if (teamObj && teamObj.players) teamObj.players[data.index] = `LCK:${data.username}`;
+      }
       socket.to(data.room).emit('slot_claimed', data);
     }
   });
@@ -78,22 +91,31 @@ io.on('connection', (socket) => {
   // Evento para desocupar o cambiar de lugar
   socket.on('unclaim_slot', (data) => {
     if (data.room) {
+      if (roomStates[data.room]) {
+         const teamObj = data.team === 'A' ? roomStates[data.room].teamA : roomStates[data.room].teamB;
+         if (teamObj && teamObj.players) teamObj.players[data.index] = '';
+      }
       socket.to(data.room).emit('slot_unclaimed', data);
     }
   });
 
   // Evento para sincronizar nombre y jugadores del equipo
   socket.on('update_team', (data) => {
-    // data => { room, team, teamData }
     if (data.room) {
+      if (roomStates[data.room]) {
+         if (data.team === 'A') roomStates[data.room].teamA = data.teamData;
+         else if (data.team === 'B') roomStates[data.room].teamB = data.teamData;
+      }
       socket.to(data.room).emit('team_updated', data);
     }
   });
 
   // Evento para sincronizar categorías
   socket.on('update_categories', (data) => {
-    // data => { room, categories }
     if (data.room) {
+      if (roomStates[data.room]) {
+         roomStates[data.room].categories = data.categories;
+      }
       socket.to(data.room).emit('categories_updated', data);
     }
   });
