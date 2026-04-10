@@ -27,7 +27,7 @@ const isMatchString = (input, target) => {
   if (nt.length > 5 && ni.length > 3) {
     if (nt.includes(ni) || ni.includes(nt)) return true;
   }
-  const threshold = Math.max(1, Math.floor(nt.length * 0.25));
+  const threshold = Math.max(1, Math.floor(nt.length * 0.40));
   return levenshtein(ni, nt) <= threshold;
 };
 
@@ -91,10 +91,10 @@ const validateAnswer = async (req, res) => {
       }
     }
 
-    // Umbral estricto definido por el usuario: 0.85
+    // Umbral estricto definido por el usuario reducido para tolerar variaciones
     console.log(`[Validation] Input: "${input}", Best match: "${bestIndex !== -1 ? cachedAnswers[bestIndex].text : 'N/A'}", Score: ${bestSimilarity.toFixed(4)}`);
     
-    if (bestSimilarity >= 0.85 && bestIndex !== -1) {
+    if (bestSimilarity >= 0.55 && bestIndex !== -1) {
       return res.json({
         success: true,
         isCorrect: true,
