@@ -56,7 +56,8 @@ io.on('connection', (socket) => {
       roomStates[roomCode] = {
         teamA: { name: '', players: ['', '', '', '', ''] },
         teamB: { name: '', players: ['', '', '', '', ''] },
-        categories: []
+        categories: [],
+        gameState: null
       };
     } else {
       // Sincronizar inmediatamente al que recién entra
@@ -65,6 +66,13 @@ io.on('connection', (socket) => {
 
     // Opcional: avisar a los demás usuarios de la sala
     socket.to(roomCode).emit('user_joined', { id: socket.id, room: roomCode });
+  });
+
+  // Manejar reconexiones pidiendo datos
+  socket.on('request_room_data', (data) => {
+    if (data.room && roomStates[data.room]) {
+      socket.emit('sync_room_state', roomStates[data.room]);
+    }
   });
 
   // Evento simple de chat / interaccion para el room
@@ -116,11 +124,36 @@ io.on('connection', (socket) => {
   });
 
   socket.on('sync_game_state', (data) => {
-    if (data.room) socket.to(data.room).emit('game_state_synced', data);
+    if (data.room) {
+      if (roomStates[data.room]) {
+         roomStates[data.room].gameState = { ...roomStates[data.room].gameState, ...data.updates };
+      }
+      socket.to(data.room).emit('game_state_synced', data);
+    }
   });
   
   socket.on('next_question', (data) => {
-    if (data.room) io.to(data.room).emit('question_advanced', data);
+    if (data.room) {
+      if (roomStates[data.room]) {
+         roomStates[data.room].gameState = {
+             ...roomStates[data.room].gameState,
+             question: data.question,
+             revealedAnswers: data.question.answers.map(() => false),
+             currentStrikes: 0,
+             phase: 'roulette',
+             isInputDisabled: true,
+             isTimerRunning: false,
+             roundOwnerIndex: 0
+         };
+      }
+      io.to(data.room).emit('question_advanced', data);
+    }
+  });
+
+  socket.on('end_game_winner', (data) => {
+    if (data.room) {
+      io.to(data.room).emit('go_to_winner', data);
+    }
   });
 
   // Evento para sincronizar categorías
@@ -137,6 +170,9 @@ io.on('connection', (socket) => {
   socket.on('start_game', (data) => {
     // data => { room, gameState }
     if (data.room) {
+      if (roomStates[data.room]) {
+        roomStates[data.room].gameState = data.gameState;
+      }
       io.to(data.room).emit('game_started', data);
     }
   });
