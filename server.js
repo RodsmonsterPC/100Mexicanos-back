@@ -110,6 +110,19 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Eventos para Partida Multijugador en Curso
+  socket.on('spin_roulette', (data) => {
+    if (data.room) socket.to(data.room).emit('roulette_spun', data);
+  });
+
+  socket.on('sync_game_state', (data) => {
+    if (data.room) socket.to(data.room).emit('game_state_synced', data);
+  });
+  
+  socket.on('next_question', (data) => {
+    if (data.room) io.to(data.room).emit('question_advanced', data);
+  });
+
   // Evento para sincronizar categorías
   socket.on('update_categories', (data) => {
     if (data.room) {
