@@ -54,7 +54,7 @@ io.on('connection', (socket) => {
     socket.join(roomCode);
     console.log(`Usuario ${socket.id} se unió a la sala: ${roomCode}`);
     
-    // Inicializar estado de la sala si no existe
+    // Inicializar estado de la sala si no existe, por defecto 5 jugadores
     if (!roomStates[roomCode]) {
       roomStates[roomCode] = {
         teamA: { name: '', players: ['', '', '', '', ''] },
@@ -69,6 +69,24 @@ io.on('connection', (socket) => {
 
     // Opcional: avisar a los demás usuarios de la sala
     socket.to(roomCode).emit('user_joined', { id: socket.id, room: roomCode });
+  });
+
+  // Crear una sala específica con número de jugadores
+  socket.on('create_room', (data) => {
+    const { roomCode, playersCount } = data;
+    socket.join(roomCode);
+    console.log(`Usuario ${socket.id} CREÓ la sala: ${roomCode} con ${playersCount} jugadores`);
+
+    const teamSize = playersCount / 2;
+    // Inicializar estado de la sala
+    roomStates[roomCode] = {
+      teamA: { name: '', players: new Array(teamSize).fill('') },
+      teamB: { name: '', players: new Array(teamSize).fill('') },
+      categories: [],
+      gameState: null
+    };
+
+    socket.emit('sync_room_state', roomStates[roomCode]);
   });
 
   // Manejar reconexiones pidiendo datos
