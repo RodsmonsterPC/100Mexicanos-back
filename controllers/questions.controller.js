@@ -52,7 +52,19 @@ const getRandomQuestion = async (req, res) => {
         query.userCategory = null;
     }
 
-    const count = await QuestionCard.countDocuments(query);
+    if (req.query.exclude) {
+       query._id = { $nin: req.query.exclude.split(',') };
+    }
+
+    let count = await QuestionCard.countDocuments(query);
+    let resetExclude = false;
+    
+    if (count === 0 && req.query.exclude) {
+       delete query._id; 
+       count = await QuestionCard.countDocuments(query);
+       resetExclude = true;
+    }
+
     if (count === 0) return res.status(404).json({ success: false, message: 'No hay preguntas con esos criterios.' });
     
     const random = Math.floor(Math.random() * count);
@@ -62,7 +74,7 @@ const getRandomQuestion = async (req, res) => {
       ...question.toObject(),
       answers: question.answers.map((a) => ({ ...a.toObject(), revealed: false })),
     };
-    res.json({ success: true, data: cleanQuestion });
+    res.json({ success: true, data: cleanQuestion, resetExclude });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
