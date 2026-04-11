@@ -3,7 +3,7 @@ const { pipeline } = require('@xenova/transformers');
 class EmbeddingService {
   constructor() {
     this.extractor = null;
-    this.modelName = 'Xenova/all-MiniLM-L6-v2';
+    this.modelName = 'Xenova/paraphrase-multilingual-MiniLM-L12-v2';
     this.initializationPromise = null;
   }
 

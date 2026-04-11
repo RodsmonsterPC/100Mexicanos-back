@@ -94,7 +94,8 @@ const validateAnswer = async (req, res) => {
     // Umbral estricto definido por el usuario reducido para tolerar variaciones
     console.log(`[Validation] Input: "${input}", Best match: "${bestIndex !== -1 ? cachedAnswers[bestIndex].text : 'N/A'}", Score: ${bestSimilarity.toFixed(4)}`);
     
-    if (bestSimilarity >= 0.55 && bestIndex !== -1) {
+    // Bajamos el umbral a 0.50 para dar más flexibilidad a sinónimos con el nuevo modelo multilingüe
+    if (bestSimilarity >= 0.50 && bestIndex !== -1) {
       return res.json({
         success: true,
         isCorrect: true,
