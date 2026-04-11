@@ -22,7 +22,7 @@ const refreshCategoryPoints = async (categoryId) => {
 
 const getUserCategories = async (req, res) => {
   try {
-    const categories = await UserCategory.find({ createdBy: req.user.id });
+    const categories = await UserCategory.find({ createdBy: req.userId });
     
     // Obtener la cantidad de cartas por cada categoría manualmente (o podríamos agregarlo al modelo)
     const result = [];
@@ -45,14 +45,14 @@ const createUserCategory = async (req, res) => {
     const { name } = req.body;
     if (!name) return res.status(400).json({ message: 'El nombre es obligatorio' });
 
-    const count = await UserCategory.countDocuments({ createdBy: req.user.id });
+    const count = await UserCategory.countDocuments({ createdBy: req.userId });
     if (count >= 3) {
       return res.status(400).json({ message: 'Límite máximo de 3 mazos alcanzado' });
     }
 
     const newCategory = new UserCategory({
       name,
-      createdBy: req.user.id,
+      createdBy: req.userId,
       totalPoints: 0,
       isPlayable: false
     });
@@ -67,7 +67,7 @@ const createUserCategory = async (req, res) => {
 const deleteUserCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const category = await UserCategory.findOne({ _id: id, createdBy: req.user.id });
+    const category = await UserCategory.findOne({ _id: id, createdBy: req.userId });
     if (!category) return res.status(404).json({ message: 'Mazo no encontrado' });
 
     // Eliminar todas las tarjetas de este mazo
@@ -83,7 +83,7 @@ const deleteUserCategory = async (req, res) => {
 const getCategoryCards = async (req, res) => {
   try {
     const { categoryId } = req.params;
-    const category = await UserCategory.findOne({ _id: categoryId, createdBy: req.user.id });
+    const category = await UserCategory.findOne({ _id: categoryId, createdBy: req.userId });
     if (!category) return res.status(404).json({ message: 'Mazo no encontrado' });
 
     const cards = await QuestionCard.find({ userCategory: categoryId });
@@ -98,7 +98,7 @@ const createCategoryCard = async (req, res) => {
     const { categoryId } = req.params;
     const { question, answers } = req.body;
 
-    const category = await UserCategory.findOne({ _id: categoryId, createdBy: req.user.id });
+    const category = await UserCategory.findOne({ _id: categoryId, createdBy: req.userId });
     if (!category) return res.status(404).json({ message: 'Mazo no encontrado' });
 
     const currentCardsCount = await QuestionCard.countDocuments({ userCategory: categoryId });
@@ -110,7 +110,7 @@ const createCategoryCard = async (req, res) => {
       question: question,
       category: category.name, // Usamos el nombre también por compatibilidad local
       answers: answers,
-      createdBy: req.user.id,
+      createdBy: req.userId,
       userCategory: category._id
     });
 
@@ -128,11 +128,11 @@ const updateCategoryCard = async (req, res) => {
       const { categoryId, cardId } = req.params;
       const { question, answers } = req.body;
   
-      const category = await UserCategory.findOne({ _id: categoryId, createdBy: req.user.id });
+      const category = await UserCategory.findOne({ _id: categoryId, createdBy: req.userId });
       if (!category) return res.status(404).json({ message: 'Mazo no encontrado' });
   
       const card = await QuestionCard.findOneAndUpdate(
-          { _id: cardId, userCategory: categoryId, createdBy: req.user.id },
+          { _id: cardId, userCategory: categoryId, createdBy: req.userId },
           { question, answers },
           { new: true, runValidators: true }
       );
@@ -151,10 +151,10 @@ const deleteCategoryCard = async (req, res) => {
   try {
     const { categoryId, cardId } = req.params;
     
-    const category = await UserCategory.findOne({ _id: categoryId, createdBy: req.user.id });
+    const category = await UserCategory.findOne({ _id: categoryId, createdBy: req.userId });
     if (!category) return res.status(404).json({ message: 'Mazo no encontrado' });
 
-    const card = await QuestionCard.findOneAndDelete({ _id: cardId, userCategory: categoryId, createdBy: req.user.id });
+    const card = await QuestionCard.findOneAndDelete({ _id: cardId, userCategory: categoryId, createdBy: req.userId });
     if (!card) return res.status(404).json({ message: 'Carta no encontrada' });
 
     await refreshCategoryPoints(category._id);
