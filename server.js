@@ -198,6 +198,20 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('disconnecting', () => {
+    // Limpieza de memoria (Garbage Collection de salas vacías)
+    for (const room of socket.rooms) {
+      if (room !== socket.id) {
+        const clientsInRoom = io.sockets.adapter.rooms.get(room)?.size;
+        // Si hay 1 cliente (el que se está saliendo) y la sala tiene estado, la eliminamos
+        if (clientsInRoom === 1 && roomStates[room]) {
+          console.log(`🧹 Sala ${room} quedará vacía. Limpiando estado de variable global para liberar RAM.`);
+          delete roomStates[room];
+        }
+      }
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log(`🔌 Cliente desconectado: ${socket.id}`);
   });

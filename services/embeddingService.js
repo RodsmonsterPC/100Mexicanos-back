@@ -1,4 +1,9 @@
-const { pipeline } = require('@xenova/transformers');
+const { pipeline, env } = require('@xenova/transformers');
+
+// Configuración obligatoria para reducir drásticamente el consumo de memoria en entornos de bajos recursos (ej. ~512MB en Render)
+// Evita que se disparen múltiples hilos de WebAssembly, lo que causa picos enormes de RAM
+env.backends.onnx.wasm.numThreads = 1; 
+env.allowLocalModels = false;
 
 class EmbeddingService {
   constructor() {
