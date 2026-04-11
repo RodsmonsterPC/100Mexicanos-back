@@ -10,6 +10,8 @@ const questionCardSchema = new mongoose.Schema(
   {
     question: { type: String, required: true, trim: true },
     category: { type: String, required: true, default: 'General', trim: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    userCategory: { type: mongoose.Schema.Types.ObjectId, ref: 'UserCategory', default: null },
     answers: {
       type: [answerSchema],
       validate: {

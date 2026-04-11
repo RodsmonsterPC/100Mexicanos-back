@@ -24,7 +24,7 @@ const getAllQuestions = async (req, res) => {
 
 const getCategories = async (req, res) => {
   try {
-    const categories = await QuestionCard.distinct('category');
+    const categories = await QuestionCard.distinct('category', { userCategory: null });
     res.json({ success: true, count: categories.length, data: categories });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -34,10 +34,22 @@ const getCategories = async (req, res) => {
 const getRandomQuestion = async (req, res) => {
   try {
     const query = {};
+    const conditions = [];
+
     if (req.query.categories) {
-      // Split by comma
       const categoriesArray = req.query.categories.split(',');
-      query.category = { $in: categoriesArray };
+      conditions.push({ category: { $in: categoriesArray }, userCategory: null });
+    }
+
+    if (req.query.userCategories) {
+      const userCategoriesArray = req.query.userCategories.split(',');
+      conditions.push({ userCategory: { $in: userCategoriesArray } });
+    }
+    
+    if (conditions.length > 0) {
+        query.$or = conditions;
+    } else {
+        query.userCategory = null;
     }
 
     const count = await QuestionCard.countDocuments(query);

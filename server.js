@@ -33,8 +33,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const authRoutes = require('./routes/auth.routes');
+const userCategoriesRoutes = require('./routes/userCategories.routes');
+
 app.use('/api/questions', questionRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/user-categories', userCategoriesRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: '100 Mexicanos Dijeron API ✅' });
