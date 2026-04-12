@@ -3,12 +3,13 @@ const { pipeline, env } = require('@xenova/transformers');
 // Configuración obligatoria para reducir drásticamente el consumo de memoria en entornos de bajos recursos (ej. ~512MB en Render)
 // Evita que se disparen múltiples hilos de WebAssembly, lo que causa picos enormes de RAM
 env.backends.onnx.wasm.numThreads = 1; 
+env.backends.onnx.wasm.simd = false; // Desactivar SIMD para reducir el overhead de memoria
 env.allowLocalModels = false;
 
 class EmbeddingService {
   constructor() {
     this.extractor = null;
-    this.modelName = 'Xenova/paraphrase-multilingual-MiniLM-L12-v2';
+    this.modelName = 'Xenova/all-MiniLM-L6-v2'; // Modelo ligero (~90MB) en vez del multilingüe (~471MB) que crashea Render
     this.initializationPromise = null;
   }
 
