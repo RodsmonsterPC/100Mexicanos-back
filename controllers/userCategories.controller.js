@@ -80,6 +80,32 @@ const deleteUserCategory = async (req, res) => {
   }
 };
 
+const updateUserCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ message: 'El nombre es obligatorio' });
+
+    const category = await UserCategory.findOneAndUpdate(
+      { _id: id, createdBy: req.userId },
+      { name: name.trim() },
+      { new: true }
+    );
+
+    if (!category) return res.status(404).json({ message: 'Mazo no encontrado' });
+
+    // Actualizar también el campo category de las tarjetas relacionadas por compatibilidad
+    await QuestionCard.updateMany(
+      { userCategory: category._id, createdBy: req.userId },
+      { category: name.trim() }
+    );
+
+    res.json(category);
+  } catch (err) {
+    res.status(500).json({ message: 'Error al actualizar mazo', error: err.message });
+  }
+};
+
 const getCategoryCards = async (req, res) => {
   try {
     const { categoryId } = req.params;
@@ -169,6 +195,7 @@ module.exports = {
   getUserCategories,
   createUserCategory,
   deleteUserCategory,
+  updateUserCategory,
   getCategoryCards,
   createCategoryCard,
   updateCategoryCard,

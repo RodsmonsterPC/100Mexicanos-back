@@ -5,6 +5,7 @@ const {
   getUserCategories,
   createUserCategory,
   deleteUserCategory,
+  updateUserCategory,
   getCategoryCards,
   createCategoryCard,
   updateCategoryCard,
@@ -17,6 +18,7 @@ router.use(requireAuth);
 // Rutas de mazos (categorías)
 router.get('/', getUserCategories);
 router.post('/', createUserCategory);
+router.put('/:id', updateUserCategory);
 router.delete('/:id', deleteUserCategory);
 
 // Rutas de cartas dentro de un mazo
