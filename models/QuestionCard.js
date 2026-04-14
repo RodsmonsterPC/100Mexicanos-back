@@ -4,6 +4,7 @@ const answerSchema = new mongoose.Schema({
   text: { type: String, required: true, trim: true },
   points: { type: Number, required: true, min: 1 },
   revealed: { type: Boolean, default: false },
+  synonyms: [{ type: String, trim: true }]
 });
 
 const questionCardSchema = new mongoose.Schema(
